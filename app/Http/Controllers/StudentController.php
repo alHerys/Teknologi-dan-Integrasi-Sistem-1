@@ -1,0 +1,186 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+
+class StudentController extends Controller
+{
+
+    private $students = [
+        [
+            "nim" => "123456789012345",
+            "nama" => "Citra Dewi",
+            "mataKuliah" => [
+                ["kode" => "CIE61205", "nama" => "PemWeb", "sks" => 3],
+                ["kode" => "COM60015", "nama" => "MatDis", "sks" => 2]
+            ]
+        ],
+        [
+            "nim" => "123456789012346",
+            "nama" => "Andy Lau",
+            "mataKuliah" => [
+                ["kode" => "CIE61205", "nama" => "PemWeb", "sks" => 3],
+                ["kode" => "CIE61206", "nama" => "JarKom", "sks" => 3],
+                ["kode" => "CIE61208", "nama" => "BasDat", "sks" => 3]
+            ]
+        ]
+    ];
+
+    public function store(Request $request)
+    {
+        try {
+            $validate = $request->validate([
+                'nim' => 'required|digits:15',
+                'nama' => 'required|string|max:50|min:3',
+                'mataKuliah' => 'required|array|min:1',
+                'mataKuliah.*.kode' => 'required|regex:/^[A-Z]{3}[0-9]{5}$/',
+                'mataKuliah.*.nama' => 'required|string|max:50|min:3',
+                'mataKuliah.*.sks' => 'required|numeric|min:1|max:6',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                "message" => "Validation failed",
+                "errors" => $e->errors()
+            ], 422);
+        }
+
+        return response()->json([
+            "message" => "Student created successfully",
+            "data" => $validate
+        ], 201);
+    }
+
+    public function show($nim)
+    {
+        foreach ($this->students as $student) {
+            if ($student['nim'] === $nim) {
+                return response()->json([
+                    "message" => "Student retrieved successfully",
+                    "data" => $student
+                ], 200);
+            }
+        }
+        return response()->json([
+            "message" => "Student not found"
+        ], 404);
+
+    }
+
+    public function index()
+    {
+        return response()->json([
+            "message" => "Students retrieved successfully",
+            "data" => $this->students
+        ], 200);
+    }
+
+    public function update(Request $request, $nim)
+    {
+        try {
+            $validated = $request->validate([
+                'nama' => 'sometimes|required|string|min:3|max:50',
+                'mataKuliah' => 'sometimes|required|array|min:1',
+                'mataKuliah.*.kode' => 'sometimes|required|regex:/^[A-Z]{3}[0-9]{5}$/',
+                'mataKuliah.*.nama' => 'sometimes|required|string|max:50|min:3',
+                'mataKuliah.*.sks' => 'sometimes|required|numeric|min:1|max:6',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                "message" => "Validation failed",
+                "errors" => $e->errors()
+            ], 422);
+        }
+        return response()->json([
+            "message" => "Student {$nim} updated successfully",
+            "data" => array_merge(['nim' => $nim], $validated)
+        ], 200);
+    }
+
+    public function destroy($nim)
+    {
+        return response()->json([
+            "message" => "Student {$nim} deleted successfully"
+        ], 200);
+    }
+
+    public function mataKuliahByStudent($nim)
+    {
+        foreach ($this->students as $student) {
+            if ($student['nim'] === $nim) {
+                return response()->json([
+                    "message" => "Courses retrieved successfully",
+                    "student_nim" => $nim,
+                    "data" => $student['mataKuliah']
+                ], 200);
+            }
+        }
+        return response()->json([
+            "message" => "Student not found"
+
+        ], 404);
+    }
+
+    public function search(Request $request)
+    {
+
+        $nim = $request->query('nim');
+        $nama = $request->query('nama');
+        $kodeMk = $request->query('kodeMk');
+
+
+        $students = [
+            [
+                "nim" => "245150700111022",
+                "nama" => "Citra Dewi",
+                "mataKuliah" => [
+                    ["kode" => "CIE61205", "nama" => "PemWeb", "sks" => 3],
+                    ["kode" => "COM60015", "nama" => "MatDis", "sks" => 2]
+                ]
+            ],
+            [
+                "nim" => "123456789012346",
+                "nama" => "Andy Lau",
+                "mataKuliah" => [
+                    ["kode" => "CIE61205", "nama" => "PemWeb", "sks" => 3],
+                    ["kode" => "CIE61206", "nama" => "JarKom", "sks" => 3],
+                    ["kode" => "CIE61208", "nama" => "BasDat", "sks" => 3]
+                ]
+            ]
+        ];
+
+
+        if (isset($nim)) {
+            $result = collect($students)->firstWhere('nim', $nim);
+
+            return response()->json($result);
+        }
+
+
+        if (isset($nama)) {
+            $result = collect($students)->firstWhere(
+                fn($student) => str_contains(
+                    strtolower($student['nama']),
+                    strtolower($nama)
+                )
+            );
+
+            return response()->json($result);
+        }
+
+
+        if (isset($kodeMk)) {
+            $result = collect($students)->filter(
+                fn($student) => collect($student['mataKuliah'])->contains('kode', $kodeMk)
+            );
+
+            return response()->json($result);
+        }
+
+
+        return response()->json([
+            "message" => "Error: Must provide at least one query parameter",
+        ]);
+    }
+}

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REST API Client dengan Axios</title>
+</head>
+
+<body>
+    <h1>REST API Client Mahasiswa</h1>
+
+    <h2>Form Input</h2>
+    <div>
+        <label>NIM:
+            <input type="text" id="nim" required>
+        </label><br><br>
+        <label>Nama:
+            <input type="text" id="nama">
+        </label><br><br>
+        <label>Kode MK:
+            <input type="text" id="kodeMk">
+        </label><br><br>
+        <label>Nama MK:
+            <input type="text" id="namaMk">
+        </label><br><br>
+        <label>SKS:
+            <input type="number" id="sks">
+        </label><br><br>
+    </div>
+
+    <button onclick="getStudents()">Tampilkan Semua Mahasiswa</button>
+    <button onclick="createStudent()">Simpan Mahasiswa</button>
+    <button onclick="updateStudentPatch()">Ubah Nama Mahasiswa</button>
+    <button onclick="deleteStudent()">Hapus Mahasiswa</button>
+
+    <h2>Output</h2>
+    <div id="output"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
