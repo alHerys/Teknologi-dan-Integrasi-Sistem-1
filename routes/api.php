@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StudentController;
@@ -26,3 +27,13 @@ Route::get('/students/{nim}/mata-kuliah', [StudentController::class, 'mataKuliah
 Route::get('/students/{nim}', [StudentController::class, 'show']);
 Route::delete('/students/{nim}', [StudentController::class, 'destroy']);
 Route::get('/students/{nim}/mata-kuliah', [StudentController::class, 'mataKuliahByStudent']);
+
+// JWT
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+
+Route::middleware(['dummy.jwt'])->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/profile', [AuthController::class, 'profile']);
+    Route::get('/token-check', [AuthController::class, 'tokenCheck']);
+});
