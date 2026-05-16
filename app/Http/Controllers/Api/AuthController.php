@@ -1,46 +1,51 @@
 <?php
+
 namespace App\Http\Controllers\Api;
+
 use App\Http\Controllers\Controller;
 use App\Models\DummyUser;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
+
 class AuthController extends Controller
 {
     private $users = [
         [
             'id' => 1,
             'name' => 'User Cakep',
-
             'email' => 'user@example.com',
-            'password' => 'password123'
+            'password' => 'password123',
+            'role' => 'user',
         ],
         [
             'id' => 2,
             'name' => 'Admin Hebat',
             'email' => 'admin@example.com',
-            'password' => 'secret321'
+            'password' => 'secret321',
+            'role' => 'admin',
         ],
         [
             'id' => 3,
             'name' => 'Alvianto Hery Sarborn',
             'email' => 'alfiantohery09@student.ub.ac.id',
-            'password' => '123456789'
+            'password' => '123456789',
+            'role' => 'manager',
         ],
     ];
-    
+
     public function register(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:100',
             'email' => 'required|email',
-            'password' => 'required|string|min:6|confirmed'
+            'password' => 'required|string|min:6|confirmed',
         ]);
 
         $oldUser = collect($this->users)->firstWhere('email', $validated['email']);
         if ($oldUser) {
             return response()->json([
-                'message' => 'Email already registered'
+                'message' => 'Email already registered',
             ], 422);
         }
 
@@ -50,81 +55,90 @@ class AuthController extends Controller
             'email' => $validated['email'],
             'password' => $validated['password'],
         ];
+
         return response()->json([
             'message' => 'User registered successfully (dummy)',
-            'user' => $user
+            'user' => $user,
         ], 201);
     }
+
     public function login(Request $request)
     {
         $credentials = $request->validate([
             'email' => 'required|email',
-            'password' => 'required|string'
+            'password' => 'required|string',
         ]);
         $userData = collect($this->users)->firstWhere(
             'email',
             $credentials['email']
         );
-        if (!$userData || $userData['password'] !== $credentials['password']) {
+        if (! $userData || $userData['password'] !== $credentials['password']) {
             return response()->json([
-                'message' => 'Invalid email or password'
+                'message' => 'Invalid email or password',
             ], 401);
         }
         $user = new DummyUser($userData);
         $token = JWTAuth::claims([
-
             'email' => $user->email,
-            'name' => $user->name
+            'name' => $user->name,
+            'role' => $userData['role'],
         ])->fromUser($user);
+
         return response()->json([
             'message' => 'Login successful (dummy)',
-            'token' =>
-                $token
+            'token' => $token,
         ]);
     }
+
     public function logout()
     {
         try {
             JWTAuth::invalidate(JWTAuth::getToken());
+
             return response()->json([
-                'message' => 'User logged out successfully'
+                'message' => 'User logged out successfully',
             ]);
         } catch (JWTException $e) {
             return response()->json([
-                'message' => 'Failed to logout, token invalid'
+                'message' => 'Failed to logout, token invalid',
             ], 500);
         }
     }
+
     public function profile(Request $request)
     {
         try {
             $payload = $request->jwt_payload;
+
             return response()->json([
                 'user' => [
                     'email' => $payload->get('email'),
-                    'name' => $payload->get('name')
-                ]
+                    'name' => $payload->get('name'),
+                    'role' => $payload->get('role'),
+                ],
             ]);
         } catch (JWTException $e) {
             return response()->json([
-                'message' => 'Token is invalid or expired'
+                'message' => 'Token is invalid or expired',
             ], 401);
         }
     }
+
     public function tokenCheck(Request $request)
     {
         try {
             $payload = $request->jwt_payload;
+
             return response()->json([
                 'message' => 'Token valid',
                 'user' => [
                     'email' => $payload->get('email'),
-                    'name' => $payload->get('name')
-                ]
+                    'name' => $payload->get('name'),
+                ],
             ]);
         } catch (JWTException $e) {
             return response()->json([
-                'message' => 'Token is invalid or expired'
+                'message' => 'Token is invalid or expired',
             ], 401);
         }
 

@@ -129,7 +129,6 @@ class StudentController extends Controller
         $nama = $request->query('nama');
         $kodeMk = $request->query('kodeMk');
 
-
         $students = [
             [
                 "nim" => "245150700111022",
