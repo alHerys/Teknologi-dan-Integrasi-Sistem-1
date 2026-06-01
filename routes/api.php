@@ -67,8 +67,11 @@ Route::middleware(['dummy.jwt'])->prefix('gateway')->group(function () {
         ->middleware('role:admin');
     Route::get('/profile', [GatewayController::class, 'getProfile'])
         ->middleware('role:admin,user');
-    Route::get('/user/dashboard',  [GatewayController::class, 'getUserDashboard'])
+    Route::get('/user/dashboard', [GatewayController::class, 'getUserDashboard'])
         ->middleware('role:user');
     Route::get('/admin/dashboard', [GatewayController::class, 'getAdminDashboard'])
         ->middleware('role:admin');
 });
+
+// MODUL 9
+Route::get('/students/{nim}/courses', [StudentController::class, 'coursesByStudent']);
