@@ -6,9 +6,22 @@ use App\Models\Course;
 use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use OpenApi\Attributes as OA;
 
 class StudentController extends Controller
 {
+    #[OA\Post(path: '/v1/students', summary: 'Menambahkan data student baru ke database', tags: ['Students V1'])]
+    #[OA\RequestBody(required: true, content: new OA\JsonContent(
+        required: ['nim', 'nama', 'mataKuliah'],
+        properties: [
+            new OA\Property(property: 'nim', type: 'string', example: '123456789012347'),
+            new OA\Property(property: 'nama', type: 'string', example: 'Budi Santoso'),
+            new OA\Property(property: 'program_studi', type: 'string', example: 'Sistem Informasi'),
+            new OA\Property(property: 'angkatan', type: 'integer', example: 2023),
+        ]
+    ))]
+    #[OA\Response(response: 201, description: 'Student berhasil ditambahkan')]
+    #[OA\Response(response: 422, description: 'Validasi gagal')]
     public function store(Request $request)
     {
         try {
@@ -59,7 +72,7 @@ class StudentController extends Controller
     {
         $student = Student::with('courses')->where('nim', $nim)->first();
 
-        if (! $student) {
+        if (!$student) {
             return response()->json([
                 'message' => 'Student not found',
             ], 404);
@@ -72,6 +85,15 @@ class StudentController extends Controller
 
     }
 
+    #[OA\Get(
+        path: '/v1/students',
+        summary: 'Menampilkan data student versi 1',
+        tags: ['Students V1']
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'Data student versi 1 berhasil ditampilkan'
+    )]
     public function index()
     {
         $students = Student::with('courses')->get();
@@ -82,10 +104,37 @@ class StudentController extends Controller
         ], 200);
     }
 
+    #[OA\Get(
+        path: '/v2/students',
+        summary: 'Menampilkan data student versi 2',
+        tags: ['Students V2']
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'Data student versi 2 berhasil ditampilkan dengan format baru'
+    )]
+    public function indexV2()
+    {
+        $students = Student::with('courses')->get()->map(function ($student) {
+            return [
+                'nim' => $student->nim,
+                'nama' => $student->nama,
+                'program_studi' => $student->program_studi,
+                'status' => 'active',
+                'mata_kuliah_count' => $student->courses->count()
+            ];
+        });
+        return response()->json([
+            'version' => 'v2',
+            'message' => 'Student data with new response format',
+            'data' => $students
+        ]);
+    }
+
     public function update(Request $request, $nim)
     {
         $student = Student::where('nim', $nim)->first();
-        if (! $student) {
+        if (!$student) {
             return response()->json([
                 'message' => 'Student not found',
             ], 404);
@@ -138,7 +187,7 @@ class StudentController extends Controller
     public function destroy($nim)
     {
         $student = Student::where('nim', $nim)->first();
-        if (! $student) {
+        if (!$student) {
             return response()->json([
                 'message' => 'Student not found',
             ], 404);
@@ -152,23 +201,22 @@ class StudentController extends Controller
 
     public function mataKuliahByStudent($nim)
     {
-        foreach ($this->students as $student) {
-            if ($student['nim'] === $nim) {
-                return response()->json([
-                    'message' => 'Courses retrieved successfully',
-                    'student_nim' => $nim,
-                    'data' => $student['mataKuliah'],
-                ], 200);
-            }
+        $student = Student::with('courses')->where('nim', $nim)->first();
+
+        if (!$student) {
+            return response()->json([
+                'message' => 'Student not found',
+            ], 404);
         }
 
         return response()->json([
-            'message' => 'Student not found',
-
-        ], 404);
+            'message' => 'Courses retrieved successfully',
+            'student_nim' => $nim,
+            'data' => $student->courses,
+        ], 200);
     }
-
-    public function coursesByStudent($nim) {
+    public function coursesByStudent($nim)
+    {
         $student = Student::with('courses')->where('nim', $nim)->first();
 
         if (!$student) {
@@ -219,7 +267,7 @@ class StudentController extends Controller
 
         if (isset($nama)) {
             $result = collect($students)->firstWhere(
-                fn ($student) => str_contains(
+                fn($student) => str_contains(
                     strtolower($student['nama']),
                     strtolower($nama)
                 )
@@ -230,7 +278,7 @@ class StudentController extends Controller
 
         if (isset($kodeMk)) {
             $result = collect($students)->filter(
-                fn ($student) => collect($student['mataKuliah'])->contains('kode', $kodeMk)
+                fn($student) => collect($student['mataKuliah'])->contains('kode', $kodeMk)
             );
 
             return response()->json($result);
