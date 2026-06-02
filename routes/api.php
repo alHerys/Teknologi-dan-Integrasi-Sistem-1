@@ -10,71 +10,71 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::get('/ping', function () {
-    return response()->json(['message' => 'pong']);
-});
-// CRUD Student
-Route::post('/students', [StudentController::class, 'store']);
-Route::get('/students', [StudentController::class, 'index']);
-Route::put('/students/{nim}', [StudentController::class, 'update']);
-Route::patch('/students/{nim}', [StudentController::class, 'update']);
-Route::delete('/students/{nim}', [StudentController::class, 'destroy']);
+// Route::get('/ping', function () {
+//     return response()->json(['message' => 'pong']);
+// });
+// // CRUD Student
+// Route::post('/students', [StudentController::class, 'store']);
+// Route::get('/students', [StudentController::class, 'index']);
+// Route::put('/students/{nim}', [StudentController::class, 'update']);
+// Route::patch('/students/{nim}', [StudentController::class, 'update']);
+// Route::delete('/students/{nim}', [StudentController::class, 'destroy']);
 
-// Tugas Praktikum
-Route::get('/students/search', [StudentController::class, 'search']);
+// // Tugas Praktikum
+// Route::get('/students/search', [StudentController::class, 'search']);
 
-// Modul 5
-Route::get('/students/{nim}/mata-kuliah', [StudentController::class, 'mataKuliahByStudent']);
-Route::get('/students/{nim}', [StudentController::class, 'show']);
-Route::delete('/students/{nim}', [StudentController::class, 'destroy']);
-Route::get('/students/{nim}/mata-kuliah', [StudentController::class, 'mataKuliahByStudent']);
+// // Modul 5
+// Route::get('/students/{nim}/mata-kuliah', [StudentController::class, 'mataKuliahByStudent']);
+// Route::get('/students/{nim}', [StudentController::class, 'show']);
+// Route::delete('/students/{nim}', [StudentController::class, 'destroy']);
+// Route::get('/students/{nim}/mata-kuliah', [StudentController::class, 'mataKuliahByStudent']);
 
-// JWT
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
-Route::middleware(['dummy.jwt'])->group(function () {
-    Route::get('/profile', [AuthController::class, 'profile']);
-    Route::get('/admin/dashboard', function () {
-        return response()->json([
-            'message' => 'Welcome to Admin Dashboard',
-        ]);
-    })->middleware('role:admin');
-    Route::get('/user/dashboard', function () {
-        return response()->json([
+// // JWT
+// Route::post('/register', [AuthController::class, 'register']);
+// Route::post('/login', [AuthController::class, 'login']);
+// Route::middleware(['dummy.jwt'])->group(function () {
+//     Route::get('/profile', [AuthController::class, 'profile']);
+//     Route::get('/admin/dashboard', function () {
+//         return response()->json([
+//             'message' => 'Welcome to Admin Dashboard',
+//         ]);
+//     })->middleware('role:admin');
+//     Route::get('/user/dashboard', function () {
+//         return response()->json([
 
-            'message' => 'Welcome to User Dashboard',
-        ]);
-    })->middleware('role:user');
-    Route::get('/manager/dashboard', function () {
-        return response()->json([
-            'message' => 'Welcome to Manager Dashboard',
-        ]);
-    })->middleware('role:manager');
-    Route::post('/logout', [AuthController::class, 'logout']);
-});
+//             'message' => 'Welcome to User Dashboard',
+//         ]);
+//     })->middleware('role:user');
+//     Route::get('/manager/dashboard', function () {
+//         return response()->json([
+//             'message' => 'Welcome to Manager Dashboard',
+//         ]);
+//     })->middleware('role:manager');
+//     Route::post('/logout', [AuthController::class, 'logout']);
+// });
 
-// API Gateway
-Route::middleware(['dummy.jwt'])->prefix('gateway')->group(function () {
-    Route::get('/students', [GatewayController::class, 'getStudents'])
-        ->middleware('role:admin,user');
-    Route::post('/students', [GatewayController::class, 'createStudent'])
-        ->middleware('role:admin');
-    Route::put('/students/{nim}', [GatewayController::class, 'updateStudent'])
-        ->middleware('role:admin');
-    Route::patch('/students/{nim}', [GatewayController::class, 'updateStudent'])
-        ->middleware('role:admin');
-    Route::delete('/students/{nim}', [GatewayController::class, 'deleteStudent'])
-        ->middleware('role:admin');
-    Route::get('/profile', [GatewayController::class, 'getProfile'])
-        ->middleware('role:admin,user');
-    Route::get('/user/dashboard', [GatewayController::class, 'getUserDashboard'])
-        ->middleware('role:user');
-    Route::get('/admin/dashboard', [GatewayController::class, 'getAdminDashboard'])
-        ->middleware('role:admin');
-});
+// // API Gateway
+// Route::middleware(['dummy.jwt'])->prefix('gateway')->group(function () {
+//     Route::get('/students', [GatewayController::class, 'getStudents'])
+//         ->middleware('role:admin,user');
+//     Route::post('/students', [GatewayController::class, 'createStudent'])
+//         ->middleware('role:admin');
+//     Route::put('/students/{nim}', [GatewayController::class, 'updateStudent'])
+//         ->middleware('role:admin');
+//     Route::patch('/students/{nim}', [GatewayController::class, 'updateStudent'])
+//         ->middleware('role:admin');
+//     Route::delete('/students/{nim}', [GatewayController::class, 'deleteStudent'])
+//         ->middleware('role:admin');
+//     Route::get('/profile', [GatewayController::class, 'getProfile'])
+//         ->middleware('role:admin,user');
+//     Route::get('/user/dashboard', [GatewayController::class, 'getUserDashboard'])
+//         ->middleware('role:user');
+//     Route::get('/admin/dashboard', [GatewayController::class, 'getAdminDashboard'])
+//         ->middleware('role:admin');
+// });
 
-// MODUL 9
-Route::get('/students/{nim}/courses', [StudentController::class, 'coursesByStudent']);
+// // MODUL 9
+// Route::get('/students/{nim}/courses', [StudentController::class, 'coursesByStudent']);
 
 // MODUL 10 - API Versioning
 Route::prefix('v1')->group(function () {
@@ -138,4 +138,10 @@ Route::prefix('v2')->group(function () {
         ]);
     });
     Route::get('/students', [StudentController::class, 'indexV2']);
+    Route::post('/students', [StudentController::class, 'storeV2']);
+    Route::get('/students/{nim}', [StudentController::class, 'showV2']);
+    Route::put('/students/{nim}', [StudentController::class, 'updateV2']);
+    Route::patch('/students/{nim}', [StudentController::class, 'updateV2']);
+    Route::delete('/students/{nim}', [StudentController::class, 'destroyV2']);
+    Route::get('/students/{nim}/courses', [StudentController::class, 'coursesByStudentV2']);
 });

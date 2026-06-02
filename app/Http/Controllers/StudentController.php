@@ -68,6 +68,10 @@ class StudentController extends Controller
         ], 201);
     }
 
+    #[OA\Get(path: '/v1/students/{nim}', summary: 'Menampilkan data student berdasarkan NIM', tags: ['Students V1'])]
+    #[OA\Parameter(name: 'nim', in: 'path', required: true, description: 'NIM mahasiswa')]
+    #[OA\Response(response: 200, description: 'Student berhasil ditampilkan')]
+    #[OA\Response(response: 404, description: 'Student tidak ditemukan')]
     public function show($nim)
     {
         $student = Student::with('courses')->where('nim', $nim)->first();
@@ -131,6 +135,112 @@ class StudentController extends Controller
         ]);
     }
 
+    #[OA\Post(path: '/v2/students', summary: 'Menambahkan data student baru (v2)', tags: ['Students V2'])]
+    #[OA\RequestBody(required: true, content: new OA\JsonContent(
+        required: ['nim', 'nama', 'mataKuliah'],
+        properties: [
+            new OA\Property(property: 'nim', type: 'string', example: '123456789012347'),
+            new OA\Property(property: 'nama', type: 'string', example: 'Budi Santoso'),
+            new OA\Property(property: 'program_studi', type: 'string', example: 'Sistem Informasi'),
+            new OA\Property(property: 'angkatan', type: 'integer', example: 2023),
+        ]
+    ))]
+    #[OA\Response(response: 201, description: 'Student berhasil ditambahkan (v2)')]
+    #[OA\Response(response: 422, description: 'Validasi gagal (v2)')]
+    public function storeV2(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'nim' => 'required|digits:15|unique:students,nim',
+                'nama' => 'required|string|max:100',
+                'program_studi' => 'nullable|string|max:100',
+                'angkatan' => 'nullable|integer',
+                'mataKuliah' => 'required|array|min:1',
+                'mataKuliah.*.kode' => 'required_with:mataKuliah|string',
+                'mataKuliah.*.nama' => 'required_with:mataKuliah|string|max:100',
+                'mataKuliah.*.sks' => 'required_with:mataKuliah|integer|min:1|max:6',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'version' => 'v2',
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+        }
+        $student = Student::create([
+            'nim' => $validated['nim'],
+            'nama' => $validated['nama'],
+            'program_studi' => $validated['program_studi'] ?? null,
+            'angkatan' => $validated['angkatan'] ?? null,
+        ]);
+        $courseIds = [];
+        foreach ($validated['mataKuliah'] as $mk) {
+            $course = Course::firstOrCreate(
+                ['kode' => $mk['kode']],
+
+                [
+                    'nama' => $mk['nama'],
+                    'sks' => $mk['sks'],
+                ]
+            );
+            $courseIds[] = $course->id;
+        }
+        $student->courses()->sync($courseIds);
+        $student->load('courses');
+
+        return response()->json([
+            'version' => 'v2',
+            'message' => 'Student created successfully',
+            'data' => [
+                'nim' => $student->nim,
+                'nama' => $student->nama,
+                'program_studi' => $student->program_studi,
+                'status' => 'active',
+                'mata_kuliah_count' => $student->courses->count()
+            ]
+        ], 201);
+    }
+
+    #[OA\Get(path: '/v2/students/{nim}', summary: 'Menampilkan data student berdasarkan NIM (v2)', tags: ['Students V2'])]
+    #[OA\Parameter(name: 'nim', in: 'path', required: true, description: 'NIM mahasiswa')]
+    #[OA\Response(response: 200, description: 'Student berhasil ditampilkan (v2)')]
+    #[OA\Response(response: 404, description: 'Student tidak ditemukan (v2)')]
+    public function showV2($nim)
+    {
+        $student = Student::with('courses')->where('nim', $nim)->first();
+
+        if (!$student) {
+            return response()->json([
+                'version' => 'v2',
+                'message' => 'Student not found',
+            ], 404);
+        }
+
+        return response()->json([
+            'version' => 'v2',
+            'message' => 'Student retrieved successfully',
+            'data' => [
+                'nim' => $student->nim,
+                'nama' => $student->nama,
+                'program_studi' => $student->program_studi,
+                'status' => 'active',
+                'mata_kuliah_count' => $student->courses->count()
+            ],
+        ], 200);
+    }
+
+    #[OA\Put(path: '/v1/students/{nim}', summary: 'Memperbarui data student', tags: ['Students V1'])]
+    #[OA\Parameter(name: 'nim', in: 'path', required: true, description: 'NIM mahasiswa')]
+    #[OA\RequestBody(required: true, content: new OA\JsonContent(
+        properties: [
+            new OA\Property(property: 'nama', type: 'string', example: 'Budi Santoso'),
+            new OA\Property(property: 'program_studi', type: 'string', example: 'Sistem Informasi'),
+            new OA\Property(property: 'angkatan', type: 'integer', example: 2023),
+        ]
+    ))]
+    #[OA\Response(response: 200, description: 'Student berhasil diperbarui')]
+    #[OA\Response(response: 404, description: 'Student tidak ditemukan')]
+    #[OA\Response(response: 422, description: 'Validasi gagal')]
     public function update(Request $request, $nim)
     {
         $student = Student::where('nim', $nim)->first();
@@ -184,6 +294,84 @@ class StudentController extends Controller
         ], 200);
     }
 
+    #[OA\Put(path: '/v2/students/{nim}', summary: 'Memperbarui data student (v2)', tags: ['Students V2'])]
+    #[OA\Parameter(name: 'nim', in: 'path', required: true, description: 'NIM mahasiswa')]
+    #[OA\RequestBody(required: true, content: new OA\JsonContent(
+        properties: [
+            new OA\Property(property: 'nama', type: 'string', example: 'Budi Santoso'),
+            new OA\Property(property: 'program_studi', type: 'string', example: 'Sistem Informasi'),
+            new OA\Property(property: 'angkatan', type: 'integer', example: 2023),
+        ]
+    ))]
+    #[OA\Response(response: 200, description: 'Student berhasil diperbarui (v2)')]
+    #[OA\Response(response: 404, description: 'Student tidak ditemukan (v2)')]
+    #[OA\Response(response: 422, description: 'Validasi gagal (v2)')]
+    public function updateV2(Request $request, $nim)
+    {
+        $student = Student::where('nim', $nim)->first();
+        if (!$student) {
+            return response()->json([
+                'version' => 'v2',
+                'message' => 'Student not found',
+            ], 404);
+        }
+        try {
+            $validated = $request->validate([
+                'nama' => 'sometimes|required|string|max:100',
+                'program_studi' => 'sometimes|nullable|string|max:100',
+                'angkatan' => 'sometimes|nullable|integer',
+                'mataKuliah' => 'sometimes|required|array|min:1',
+                'mataKuliah.*.kode' => 'required_with:mataKuliah|string',
+                'mataKuliah.*.nama' => 'required_with:mataKuliah|string|max:100',
+                'mataKuliah.*.sks' => 'required_with:mataKuliah|integer|min:1|max:6',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'version' => 'v2',
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+        }
+        $student->update([
+            'nama' => $validated['nama'] ?? $student->nama,
+            'program_studi' => $validated['program_studi'] ?? $student->program_studi,
+            'angkatan' => $validated['angkatan'] ?? $student->angkatan,
+        ]);
+        if (isset($validated['mataKuliah'])) {
+            $courseIds = [];
+            foreach ($validated['mataKuliah'] as $mk) {
+                $course = Course::firstOrCreate(
+                    ['kode' => $mk['kode']],
+
+                    [
+                        'nama' => $mk['nama'],
+                        'sks' => $mk['sks'],
+
+                    ]
+                );
+                $courseIds[] = $course->id;
+            }
+            $student->courses()->sync($courseIds);
+        }
+        $student->load('courses');
+
+        return response()->json([
+            'version' => 'v2',
+            'message' => "Student {$nim} updated successfully",
+            'data' => [
+                'nim' => $student->nim,
+                'nama' => $student->nama,
+                'program_studi' => $student->program_studi,
+                'status' => 'active',
+                'mata_kuliah_count' => $student->courses->count()
+            ]
+        ], 200);
+    }
+
+    #[OA\Delete(path: '/v1/students/{nim}', summary: 'Menghapus data student', tags: ['Students V1'])]
+    #[OA\Parameter(name: 'nim', in: 'path', required: true, description: 'NIM mahasiswa')]
+    #[OA\Response(response: 200, description: 'Student berhasil dihapus')]
+    #[OA\Response(response: 404, description: 'Student tidak ditemukan')]
     public function destroy($nim)
     {
         $student = Student::where('nim', $nim)->first();
@@ -199,7 +387,32 @@ class StudentController extends Controller
         ], 200);
     }
 
-    public function mataKuliahByStudent($nim)
+    #[OA\Delete(path: '/v2/students/{nim}', summary: 'Menghapus data student (v2)', tags: ['Students V2'])]
+    #[OA\Parameter(name: 'nim', in: 'path', required: true, description: 'NIM mahasiswa')]
+    #[OA\Response(response: 200, description: 'Student berhasil dihapus (v2)')]
+    #[OA\Response(response: 404, description: 'Student tidak ditemukan (v2)')]
+    public function destroyV2($nim)
+    {
+        $student = Student::where('nim', $nim)->first();
+        if (!$student) {
+            return response()->json([
+                'version' => 'v2',
+                'message' => 'Student not found',
+            ], 404);
+        }
+        $student->delete();
+
+        return response()->json([
+            'version' => 'v2',
+            'message' => "Student {$nim} deleted successfully",
+        ], 200);
+    }
+
+    #[OA\Get(path: '/v1/students/{nim}/courses', summary: 'Menampilkan mata kuliah student', tags: ['Students V1'])]
+    #[OA\Parameter(name: 'nim', in: 'path', required: true, description: 'NIM mahasiswa')]
+    #[OA\Response(response: 200, description: 'Mata kuliah berhasil ditampilkan')]
+    #[OA\Response(response: 404, description: 'Student tidak ditemukan')]
+    public function coursesByStudent($nim)
     {
         $student = Student::with('courses')->where('nim', $nim)->first();
 
@@ -215,17 +428,24 @@ class StudentController extends Controller
             'data' => $student->courses,
         ], 200);
     }
-    public function coursesByStudent($nim)
+
+    #[OA\Get(path: '/v2/students/{nim}/courses', summary: 'Menampilkan mata kuliah student (v2)', tags: ['Students V2'])]
+    #[OA\Parameter(name: 'nim', in: 'path', required: true, description: 'NIM mahasiswa')]
+    #[OA\Response(response: 200, description: 'Mata kuliah berhasil ditampilkan (v2)')]
+    #[OA\Response(response: 404, description: 'Student tidak ditemukan (v2)')]
+    public function coursesByStudentV2($nim)
     {
         $student = Student::with('courses')->where('nim', $nim)->first();
 
         if (!$student) {
             return response()->json([
+                'version' => 'v2',
                 'message' => 'Student not found',
             ], 404);
         }
 
         return response()->json([
+            'version' => 'v2',
             'message' => 'Courses retrieved successfully',
             'student_nim' => $nim,
             'data' => $student->courses,
@@ -287,5 +507,21 @@ class StudentController extends Controller
         return response()->json([
             'message' => 'Error: Must provide at least one query parameter',
         ]);
+    }
+    public function mataKuliahByStudent($nim)
+    {
+        $student = Student::with('courses')->where('nim', $nim)->first();
+
+        if (!$student) {
+            return response()->json([
+                'message' => 'Student not found',
+            ], 404);
+        }
+
+        return response()->json([
+            'message' => 'Courses retrieved successfully',
+            'student_nim' => $nim,
+            'data' => $student->courses,
+        ], 200);
     }
 }

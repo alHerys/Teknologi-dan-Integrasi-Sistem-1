@@ -63,7 +63,7 @@ class AuthController extends Controller
         ], 201);
     }
 
-    #[OA\Post(path: '/login', summary: 'Login user dan mendapatkan JWT token', tags: ['Authentication'])]
+    #[OA\Post(path: '/v1/login', summary: 'Login user dan mendapatkan JWT token', tags: ['Authentication'])]
     #[OA\RequestBody(required: true, content: new OA\JsonContent(
         required: ['email', 'password'],
         properties: [
@@ -121,7 +121,7 @@ class AuthController extends Controller
         }
     }
 
-    #[OA\Get(path: '/profile', summary: 'Menampilkan profile user berdasarkan JWT token', tags: ['Authentication'], security: [['bearerAuth' => []]])]
+    #[OA\Get(path: '/v1/profile', summary: 'Menampilkan profile user berdasarkan JWT token', tags: ['Authentication'], security: [['bearerAuth' => []]])]
     #[OA\Response(response: 200, description: 'Profile berhasil ditampilkan', content: new OA\JsonContent(
         properties: [
             new OA\Property(

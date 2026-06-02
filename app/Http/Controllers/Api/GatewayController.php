@@ -17,7 +17,7 @@ class GatewayController extends Controller
         ]);
     }
 
-    #[OA\Get(path: '/gateway/students', summary: 'Menampilkan data student melalui API Gateway', tags: ['API Gateway'], security: [['bearerAuth' => []]])]
+    #[OA\Get(path: '/v1/gateway/students', summary: 'Menampilkan data student melalui API Gateway', tags: ['API Gateway'], security: [['bearerAuth' => []]])]
     #[OA\Response(response: 200, description: 'Data student berhasil ditampilkan melalui gateway', content: new OA\JsonContent(
         properties: [
             new OA\Property(property: 'gateway', type: 'string', example: 'API Gateway'),
@@ -37,7 +37,7 @@ class GatewayController extends Controller
             'result' => $studentController->index()->getData(),
         ]);
     }
-
+    
     public function createStudent(Request $request)
     {
         $this->logRequest($request);

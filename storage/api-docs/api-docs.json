@@ -12,13 +12,13 @@
         }
     ],
     "paths": {
-        "/login": {
+        "/v1/login": {
             "post": {
                 "tags": [
                     "Authentication"
                 ],
                 "summary": "Login user dan mendapatkan JWT token",
-                "operationId": "67d6d0fdd54fba132e1b6f55ca254183",
+                "operationId": "60ea6c037acd6167d9cd13e71538e375",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -70,13 +70,13 @@
                 }
             }
         },
-        "/profile": {
+        "/v1/profile": {
             "get": {
                 "tags": [
                     "Authentication"
                 ],
                 "summary": "Menampilkan profile user berdasarkan JWT token",
-                "operationId": "2c21d15f399373a0c224a8064ee8ae40",
+                "operationId": "5ae24515a31c91678e365c2e6867eab9",
                 "responses": {
                     "200": {
                         "description": "Profile berhasil ditampilkan",
@@ -118,13 +118,13 @@
                 ]
             }
         },
-        "/gateway/students": {
+        "/v1/gateway/students": {
             "get": {
                 "tags": [
                     "API Gateway"
                 ],
                 "summary": "Menampilkan data student melalui API Gateway",
-                "operationId": "026cd831eef195988b7255327002a2f6",
+                "operationId": "adaac81535365f09c95508dc6515f52e",
                 "responses": {
                     "200": {
                         "description": "Data student berhasil ditampilkan melalui gateway",
@@ -222,6 +222,104 @@
                 }
             }
         },
+        "/v1/students/{nim}": {
+            "get": {
+                "tags": [
+                    "Students V1"
+                ],
+                "summary": "Menampilkan data student berdasarkan NIM",
+                "operationId": "d8eb7c391d32fa19b87b319b876a40c1",
+                "parameters": [
+                    {
+                        "name": "nim",
+                        "in": "path",
+                        "description": "NIM mahasiswa",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Student berhasil ditampilkan"
+                    },
+                    "404": {
+                        "description": "Student tidak ditemukan"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Students V1"
+                ],
+                "summary": "Memperbarui data student",
+                "operationId": "3dac8f19e02fd3e57e0edf69f1433560",
+                "parameters": [
+                    {
+                        "name": "nim",
+                        "in": "path",
+                        "description": "NIM mahasiswa",
+                        "required": true
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "nama": {
+                                        "type": "string",
+                                        "example": "Budi Santoso"
+                                    },
+                                    "program_studi": {
+                                        "type": "string",
+                                        "example": "Sistem Informasi"
+                                    },
+                                    "angkatan": {
+                                        "type": "integer",
+                                        "example": 2023
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Student berhasil diperbarui"
+                    },
+                    "404": {
+                        "description": "Student tidak ditemukan"
+                    },
+                    "422": {
+                        "description": "Validasi gagal"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Students V1"
+                ],
+                "summary": "Menghapus data student",
+                "operationId": "e21ed11c44cf8e8ef10eecfdd85c5131",
+                "parameters": [
+                    {
+                        "name": "nim",
+                        "in": "path",
+                        "description": "NIM mahasiswa",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Student berhasil dihapus"
+                    },
+                    "404": {
+                        "description": "Student tidak ditemukan"
+                    }
+                }
+            }
+        },
         "/v2/students": {
             "get": {
                 "tags": [
@@ -232,6 +330,202 @@
                 "responses": {
                     "200": {
                         "description": "Data student versi 2 berhasil ditampilkan dengan format baru"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Students V2"
+                ],
+                "summary": "Menambahkan data student baru (v2)",
+                "operationId": "a53e875f24133b477677d53f5c8905e6",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nim",
+                                    "nama",
+                                    "mataKuliah"
+                                ],
+                                "properties": {
+                                    "nim": {
+                                        "type": "string",
+                                        "example": "123456789012347"
+                                    },
+                                    "nama": {
+                                        "type": "string",
+                                        "example": "Budi Santoso"
+                                    },
+                                    "program_studi": {
+                                        "type": "string",
+                                        "example": "Sistem Informasi"
+                                    },
+                                    "angkatan": {
+                                        "type": "integer",
+                                        "example": 2023
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Student berhasil ditambahkan (v2)"
+                    },
+                    "422": {
+                        "description": "Validasi gagal (v2)"
+                    }
+                }
+            }
+        },
+        "/v2/students/{nim}": {
+            "get": {
+                "tags": [
+                    "Students V2"
+                ],
+                "summary": "Menampilkan data student berdasarkan NIM (v2)",
+                "operationId": "b4843f3ff91dd158745742498e1c63cd",
+                "parameters": [
+                    {
+                        "name": "nim",
+                        "in": "path",
+                        "description": "NIM mahasiswa",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Student berhasil ditampilkan (v2)"
+                    },
+                    "404": {
+                        "description": "Student tidak ditemukan (v2)"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Students V2"
+                ],
+                "summary": "Memperbarui data student (v2)",
+                "operationId": "e4d404b59f179852051417fdd110a65b",
+                "parameters": [
+                    {
+                        "name": "nim",
+                        "in": "path",
+                        "description": "NIM mahasiswa",
+                        "required": true
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "nama": {
+                                        "type": "string",
+                                        "example": "Budi Santoso"
+                                    },
+                                    "program_studi": {
+                                        "type": "string",
+                                        "example": "Sistem Informasi"
+                                    },
+                                    "angkatan": {
+                                        "type": "integer",
+                                        "example": 2023
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Student berhasil diperbarui (v2)"
+                    },
+                    "404": {
+                        "description": "Student tidak ditemukan (v2)"
+                    },
+                    "422": {
+                        "description": "Validasi gagal (v2)"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Students V2"
+                ],
+                "summary": "Menghapus data student (v2)",
+                "operationId": "af925e49ffe5db9a4523bc8aafbc0849",
+                "parameters": [
+                    {
+                        "name": "nim",
+                        "in": "path",
+                        "description": "NIM mahasiswa",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Student berhasil dihapus (v2)"
+                    },
+                    "404": {
+                        "description": "Student tidak ditemukan (v2)"
+                    }
+                }
+            }
+        },
+        "/v1/students/{nim}/courses": {
+            "get": {
+                "tags": [
+                    "Students V1"
+                ],
+                "summary": "Menampilkan mata kuliah student",
+                "operationId": "bcaa9276364072dbba9057eddcf377c4",
+                "parameters": [
+                    {
+                        "name": "nim",
+                        "in": "path",
+                        "description": "NIM mahasiswa",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mata kuliah berhasil ditampilkan"
+                    },
+                    "404": {
+                        "description": "Student tidak ditemukan"
+                    }
+                }
+            }
+        },
+        "/v2/students/{nim}/courses": {
+            "get": {
+                "tags": [
+                    "Students V2"
+                ],
+                "summary": "Menampilkan mata kuliah student (v2)",
+                "operationId": "89ceb1985778290d802b7956e8276879",
+                "parameters": [
+                    {
+                        "name": "nim",
+                        "in": "path",
+                        "description": "NIM mahasiswa",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mata kuliah berhasil ditampilkan (v2)"
+                    },
+                    "404": {
+                        "description": "Student tidak ditemukan (v2)"
                     }
                 }
             }
